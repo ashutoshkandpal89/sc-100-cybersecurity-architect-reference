@@ -1,0 +1,22 @@
+name: Lab problem
+description: A lab fails, is unclear, or is unsafe
+labels: ["lab"]
+body:
+  - type: input
+    id: lab
+    attributes:
+      label: Which lab?
+      placeholder: labs/03-bicep-secure-storage
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What did you run and what happened?
+      description: Remove tenant IDs, subscription IDs, and any secrets before pasting.
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Tool versions (az --version, pwsh --version)

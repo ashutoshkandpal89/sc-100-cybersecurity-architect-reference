@@ -1,0 +1,25 @@
+name: Content fix or update
+description: Report outdated, incorrect, or unclear content
+labels: ["content"]
+body:
+  - type: input
+    id: location
+    attributes:
+      label: File and section
+      placeholder: docs/04-identity-access.md, "Workload identities"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong or outdated?
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Official source link (Microsoft Learn or similar)
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix (own words, please)

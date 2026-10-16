@@ -1,0 +1,24 @@
+name: azure-oidc-lab
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # required to request the OIDC token
+  contents: read
+
+jobs:
+  whoami:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Azure login (OIDC, no secret)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Show identity and read-only resource list
+        run: |
+          az account show --query "{subscription:name, tenant:tenantId}" -o table
+          az group list --query "[].name" -o tsv

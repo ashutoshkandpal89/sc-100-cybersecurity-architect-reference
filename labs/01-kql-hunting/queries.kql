@@ -1,0 +1,50 @@
+// Lab 01 — KQL hunting basics (Log Analytics / Sentinel table names)
+
+// 1) Failed sign-ins by user in the last 24h (spray/brute-force triage)
+SigninLogs
+| where TimeGenerated > ago(24h)
+| where ResultType != "0"
+| summarize Failures = count(), Apps = dcount(AppDisplayName), IPs = dcount(IPAddress) by UserPrincipalName
+| order by Failures desc
+| take 20
+
+// 2) Sign-ins that did NOT require MFA for non-trusted locations
+SigninLogs
+| where TimeGenerated > ago(7d)
+| where ResultType == "0"
+| where AuthenticationRequirement == "singleFactorAuthentication"
+| summarize Signins = count() by UserPrincipalName, AppDisplayName
+| order by Signins desc
+| take 50
+
+// 3) Users signing in from many countries in a short window (possible token theft / impossible travel)
+SigninLogs
+| where TimeGenerated > ago(24h)
+| where ResultType == "0"
+| extend Country = tostring(LocationDetails.countryOrRegion)
+| summarize Countries = make_set(Country), CountryCount = dcount(Country) by UserPrincipalName
+| where CountryCount >= 3
+| order by CountryCount desc
+
+// 4) Privileged role assignments changed (audit)
+AuditLogs
+| where TimeGenerated > ago(7d)
+| where OperationName has_any ("Add member to role", "Add eligible member to role", "Remove member from role")
+| extend Actor = tostring(InitiatedBy.user.userPrincipalName)
+| project TimeGenerated, OperationName, Actor, Result, TargetResources
+| order by TimeGenerated desc
+
+// 5) Azure control-plane deletes (potential destructive activity)
+AzureActivity
+| where TimeGenerated > ago(7d)
+| where OperationNameValue endswith "/delete" and ActivityStatusValue == "Success"
+| summarize Deletes = count() by Caller, ResourceGroup, OperationNameValue
+| order by Deletes desc
+| take 50
+
+// 6) Open high-severity incidents (Sentinel)
+SecurityIncident
+| where TimeGenerated > ago(7d)
+| summarize arg_max(TimeGenerated, *) by IncidentNumber
+| where Severity == "High" and Status != "Closed"
+| project IncidentNumber, Title, Status, Severity, CreatedTime
